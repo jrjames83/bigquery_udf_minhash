@@ -58,6 +58,8 @@ WITH offset as index
 
 -- 
 
+CREATE OR REPLACE TABLE minhash_testing.grouped_candidates AS
+
 WITH
     base_table
     AS
@@ -69,8 +71,19 @@ WITH
   GROUP BY 1,2
 )
 
-SELECT band_key, band, array_agg(URI)
+SELECT band_key, band, array_agg(URI) as documents
 FROM base_table
 GROUP BY 1,2
 
--- Iterating over the bands and elements
+-- If 2 documents appear together in any band, they're near duplicate candidates
+-- Round up all documents which appear clustered in the table
+
+-- filter down the table to where the length of the array is not 1
+CREATE OR REPLACE TABLE minhash_testing.grouped_candidates_pairs AS
+SELECT *
+FROM minhash_testing.grouped_candidates
+WHERE array_length(documents) > 1
+
+-- Think about probabilities, is 2 bands the minimum for a pair of documents?
+-- Would that eliminate false positives?
+
